@@ -4,14 +4,16 @@ import time
 import random
 import ssl
 import os
+import httpx
 from dotenv import load_dotenv
 
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', 'imp', '.env'))
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'imp', '.env'))
 
 HIVEMQ_HOST = os.getenv("HIVEMQ_HOST")
 HIVEMQ_PORT = int(os.getenv("HIVEMQ_PORT"))
 HIVEMQ_USERNAME = os.getenv("HIVEMQ_USERNAME")
 HIVEMQ_PASSWORD = os.getenv("HIVEMQ_PASSWORD")
+BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
 
 COMPRESSORS = [
     {"id": "compressor-1", "base_temp": 72.0, "base_vibration": 2.1, "base_pressure": 8.5, "runtime": 1200.0},
@@ -78,6 +80,10 @@ try:
             payload = json.dumps(reading)
             client.publish(topic, payload, qos=1)
             print(f"Published → {topic} | temp={reading['temperature']}°C | vib={reading['vibration']} mm/s | pres={reading['pressure']} bar")
+            try:
+                httpx.post(f"{BACKEND_URL}/api/v1/readings", json=reading, timeout=5.0)
+            except Exception:
+                pass
         time.sleep(5)
 except KeyboardInterrupt:
     print("Simulator stopped")
