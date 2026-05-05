@@ -1,0 +1,28 @@
+version: "3.9"
+
+services:
+  backend:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - imp/.env
+    restart: unless-stopped
+
+  simulator:
+    build: .
+    env_file:
+      - imp/.env
+    command: ["python", "-m", "simulator.simulator"]
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  edge_processor:
+    build: .
+    env_file:
+      - imp/.env
+    command: ["python", "-m", "edge_processor.edge_processor"]
+    depends_on:
+      - backend
+    restart: unless-stopped
